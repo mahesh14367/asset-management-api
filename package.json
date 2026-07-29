@@ -4,12 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
@@ -33,7 +36,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "prettier": "^3.9.6",
-    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.19.2",
     "typescript": "^7.0.2"
   }
 }
