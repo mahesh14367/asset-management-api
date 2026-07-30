@@ -1,35 +1,31 @@
 import { createApp } from './app';
 import { connectDatabase } from './config/database';
 import { config } from './config';
+import { logger } from './config/logger';
 
 const startServer = async (): Promise<void> => {
   try {
-    // Connect to database
     await connectDatabase();
-
-    // Create Express app
     const app = createApp();
 
-    // Start server
     app.listen(config.port, () => {
-      console.log(`Server is running on port ${config.port} in ${config.nodeEnv} mode`);
-      console.log(`Health check: http://localhost:${config.port}/health`);
+      logger.info(`Server is running on port ${config.port} in ${config.nodeEnv} mode`);
+      
     });
+    
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error('Failed to start server:', error as Error);
     process.exit(1);
   }
 };
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (err: Error) => {
-  console.error('Unhandled Rejection:', err);
-  process.exit(1);
+  logger.error('Unhandled Rejection:', err);
+  process.exit(1); // fail fast — let PM2/Docker restart with a clean state
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err: Error) => {
-  console.error('Uncaught Exception:', err);
+  logger.error('Uncaught Exception:', err);
   process.exit(1);
 });
 
