@@ -9,6 +9,7 @@ import { notFound } from './middlewares/notFound.middleware';
 import { globalErrorHandler } from './middlewares/error.middleware';
 import { authRoutes } from './modules/auth';
 import { userRoutes } from './modules/user';
+import { auditLogRoutes } from './modules/audit-log';
 
 export const createApp = (): Application => {
   const app = express();
@@ -31,6 +32,7 @@ export const createApp = (): Application => {
   // API routes
   app.use('/api/v1/auth', authRoutes);
   app.use('/api/v1/users', userRoutes);
+  app.use('/api/v1/audit-logs', auditLogRoutes);
 
   console.log(`server endpoint: http://localhost:${config.port}/api/v1/`);
 

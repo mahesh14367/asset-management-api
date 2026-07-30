@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import asyncHandler from '../../utils/asyncHandler';
 import ApiResponse from '../../utils/ApiResponse';
 import * as userService from './user.service';
+import { User } from './user.model';
+import { getRequestMetadata } from '../audit-log';
+
 
 export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const result = await userService.listUsers(req.query);
@@ -23,8 +26,14 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json(new ApiResponse(200, user, 'User updated successfully'));
 });
 
+// export const updateUserRole = asyncHandler(async (req: Request, res: Response) => {
+//   const user = await userService.updateUserRole(req.params.id as string, req.body.role, req.user!.id);
+//   res.status(200).json(new ApiResponse(200, user, 'User role updated successfully'));
+// });
+
 export const updateUserRole = asyncHandler(async (req: Request, res: Response) => {
-  const user = await userService.updateUserRole(req.params.id as string, req.body.role, req.user!.id);
+  const requester = await User.findById(req.user!.id);
+  const user = await userService.updateUserRole(req.params.id as string, req.body.role, requester!, getRequestMetadata(req));
   res.status(200).json(new ApiResponse(200, user, 'User role updated successfully'));
 });
 

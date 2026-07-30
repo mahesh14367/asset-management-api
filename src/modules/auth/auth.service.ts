@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import { User, UserRole, IUser } from '../user/user.model';
 import ApiError from '../../utils/ApiError';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../utils/jwt.util';
+import { createAuditLog, buildActorSnapshot, AuditAction, AuditStatus, getRequestMetadata } from '../audit-log';
+import { AuditMetadata } from '../audit-log/audit-log.model';
 
 interface RegisterInput {
   name: string;
@@ -66,6 +68,14 @@ export const register = async (input: RegisterInput) => {
   });
 
   const tokens = await generateTokens(user);
+  await createAuditLog({
+  actor: buildActorSnapshot(user),
+  action: AuditAction.USER_REGISTERED,
+  entityType: 'User',
+  entityId: user._id,
+  description: `${user.email} self-registered an account`,
+  metadata: {},
+});
   return { user: sanitizeUser(user), ...tokens };
 };
 
@@ -81,6 +91,14 @@ export const login = async (input: LoginInput) => {
   }
 
   const tokens = await generateTokens(user);
+  // await createAuditLog({
+  //   actor: buildActorSnapshot(user),
+  //   action: AuditAction.USER_LOGGED_IN,
+  //   entityType: 'User',
+  //   entityId: user._id.toString(),
+  //   description: `${user.email} logged in`,
+  //   metadata: {},
+  // });
   return { user: sanitizeUser(user), ...tokens };
 };
 
@@ -154,6 +172,15 @@ export const resetPassword = async (input: ResetPasswordInput) => {
 
   await User.findByIdAndUpdate(user._id, { $unset: { refreshTokenHash: 1 } });
 
+  await createAuditLog({
+    actor: buildActorSnapshot(user),
+    action: AuditAction.USER_PASSWORD_RESET,
+    entityType: 'User',
+    entityId: user._id,
+    description: `${user.email} reset their password`,
+    metadata: {},
+  });
+
   return { message: 'Password reset successfully. Please log in with your new password.' };
 };
 
@@ -168,4 +195,13 @@ export const changePassword = async (userId: string, currentPassword: string, ne
   user.password = hashedPassword;
   delete user.refreshTokenHash;
   await user.save();
+  
+  await createAuditLog({
+    actor: buildActorSnapshot(user),
+    action: AuditAction.USER_PASSWORD_CHANGED,
+    entityType: 'User',
+    entityId: user._id,
+    description: `${user.email} changed their password`,
+    metadata: {},
+  });
 };

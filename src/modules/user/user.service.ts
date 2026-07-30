@@ -2,6 +2,9 @@ import { User, UserRole, IUser } from './user.model';
 import ApiError from '../../utils/ApiError';
 import { getPaginationParams, buildPaginationMeta, escapeRegex } from '../../utils/pagination.util';
 import bcrypt from 'bcrypt';
+import { createAuditLog, buildActorSnapshot, AuditAction } from '../audit-log';
+import { AuditMetadata } from '../audit-log/audit-log.model';
+import { Types } from 'mongoose';
 
 interface ListUsersQuery {
   page?: number;
@@ -90,13 +93,42 @@ export const updateUser = async (id: string, input: UpdateUserInput) => {
   return sanitizeUser(user);
 };
 
-export const updateUserRole = async (id: string, role: UserRole, requesterId: string) => {
-  if (id === requesterId) {
+// export const updateUserRole = async (id: string, role: UserRole, requesterId: string) => {
+//   if (id === requesterId) {
+//     throw ApiError.badRequest('You cannot change your own role');
+//   }
+
+//   const user = await User.findByIdAndUpdate(id, { role }, { new: true, runValidators: true });
+//   if (!user) throw ApiError.notFound('User not found');
+//   return sanitizeUser(user);
+// };
+
+export const updateUserRole = async (
+  id: string,
+  role: UserRole,
+  requester: Pick<IUser, '_id' | 'name' | 'email' | 'role'>,
+  metadata: AuditMetadata
+) => {
+  if (id === requester._id.toString()) {
     throw ApiError.badRequest('You cannot change your own role');
   }
 
+  const previousUser = await User.findById(id);
+  if (!previousUser) throw ApiError.notFound('User not found');
+
   const user = await User.findByIdAndUpdate(id, { role }, { new: true, runValidators: true });
   if (!user) throw ApiError.notFound('User not found');
+
+  await createAuditLog({
+    actor: buildActorSnapshot(requester),
+    action: AuditAction.USER_ROLE_CHANGED,
+    entityType: 'User',
+    entityId: new Types.ObjectId(id),
+    description: `Changed ${user.email}'s role from ${previousUser.role} to ${role}`,
+    changes: { before: { role: previousUser.role }, after: { role } },
+    metadata,
+  });
+
   return sanitizeUser(user);
 };
 
