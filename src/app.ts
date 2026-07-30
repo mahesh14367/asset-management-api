@@ -5,43 +5,46 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import { config } from './config';
+import { notFound } from './middlewares/notFound.middleware';
+import { globalErrorHandler } from './middlewares/error.middleware';
+import { authRoutes } from './modules/auth';
+import { userRoutes } from './modules/user';
 
 export const createApp = (): Application => {
   const app = express();
 
-  // Security middleware
   app.use(helmet());
-
-  // CORS configuration
-  app.use(cors({
-    origin: config.corsOrigin,
-    credentials: true,
-  }));
-
-  // Body parsing middleware
+  app.use(cors({ origin: config.corsOrigin, credentials: true }));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
-
-  // Compression middleware
   app.use(compression());
 
-  // Logging middleware
   if (config.nodeEnv !== 'test') {
     app.use(morgan('dev'));
   }
 
-  // Health check route
   app.get('/health', (req, res) => {
-    res.status(200).json({
-      status: 'ok',
-      message: 'Asset Management API is running',
-      environment: config.nodeEnv,
-    });
+    res.status(200).json({ status: 'ok', message: 'Asset Management API is running', environment: config.nodeEnv });
   });
 
-  // API routes will be added here
-  // app.use('/api/v1', routes);
+  // API routes
+  app.use('/api/v1/auth', authRoutes);
+  app.use('/api/v1/users', userRoutes);
+
+  console.log(`server endpoint: http://localhost:${config.port}/api/v1/`);
+
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Asset Management API is running', environment: config.nodeEnv });
+  });
+  
+  app.get('/', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Asset Management API is running', environment: config.nodeEnv });
+  });
+
+  // ⚠️ Must stay last
+  app.use(notFound);
+  app.use(globalErrorHandler);
 
   return app;
 };
