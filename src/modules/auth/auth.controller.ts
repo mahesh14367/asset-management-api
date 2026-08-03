@@ -16,12 +16,6 @@ const cookieOptions = {
   path: '/api/v1/auth', // narrow scope — cookie only sent to auth endpoints
 };
 
-export const register = asyncHandler(async (req: Request, res: Response) => {
-  const { user, accessToken, refreshToken } = await authService.register(req.body);
-  res.cookie(REFRESH_COOKIE_NAME, refreshToken, cookieOptions);
-  res.status(201).json(new ApiResponse(201, { user, accessToken }, 'Account created successfully'));
-});
-
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { user, accessToken, refreshToken } = await authService.login(req.body);
   res.cookie(REFRESH_COOKIE_NAME, refreshToken, cookieOptions);
@@ -62,8 +56,3 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
   res.status(200).json(new ApiResponse(200, result, 'Password reset successfully'));
 });
 
-export const changePassword = asyncHandler(async (req: Request, res: Response) => {
-  const { currentPassword, newPassword } = req.body;
-  await authService.changePassword(req.user!.id, currentPassword, newPassword);
-  res.status(200).json(new ApiResponse(200, null, 'Password changed successfully'));
-});

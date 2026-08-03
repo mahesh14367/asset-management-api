@@ -10,6 +10,9 @@ import { globalErrorHandler } from './middlewares/error.middleware';
 import { authRoutes } from './modules/auth';
 import { userRoutes } from './modules/user';
 import { auditLogRoutes } from './modules/audit-log';
+import { employeeRoutes } from './modules/employee';
+import { assetRoutes } from './modules/asset';
+import { assetAssignmentRoutes } from './modules/asset-assignment';
 
 export const createApp = (): Application => {
   const app = express();
@@ -33,6 +36,9 @@ export const createApp = (): Application => {
   app.use('/api/v1/auth', authRoutes);
   app.use('/api/v1/users', userRoutes);
   app.use('/api/v1/audit-logs', auditLogRoutes);
+  app.use('/api/v1/employees', employeeRoutes);
+  app.use('/api/v1/assets', assetRoutes);
+  app.use('/api/v1/asset-assignments', assetAssignmentRoutes);
 
   console.log(`server endpoint: http://localhost:${config.port}/api/v1/`);
 

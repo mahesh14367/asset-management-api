@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import mongoose, { Schema, model, Model, Document, Types } from 'mongoose';
 
 
 export enum UserRole {
@@ -13,6 +13,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: UserRole;
+  employeeId: Types.ObjectId | null;
   isActive: boolean;
   refreshTokenHash?: string;
   passwordChangedAt?: Date;
@@ -49,6 +50,11 @@ const userSchema = new Schema<IUser>(
       enum: Object.values(UserRole),
       default: UserRole.EMPLOYEE,
     },
+    employeeId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Employee',
+      default: null,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -73,7 +79,10 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-// Add this line after the schema definition, before `export const User = ...`
-userSchema.index({ role: 1, isActive: 1 }); // supports common admin filters efficiently
+// sparse: true means the uniqueness constraint only applies to documents where employeeId
+// is NOT null — otherwise every self-registered user with employeeId: null would collide
+// on a "duplicate null" unique-index error. This enforces: at most ONE User per Employee.
+userSchema.index({ employeeId: 1 }, { unique: true, sparse: true });
 
-export const User = model<IUser>('User', userSchema);
+
+export const User = (mongoose.models.User as Model<IUser>) ?? model<IUser>('User', userSchema);

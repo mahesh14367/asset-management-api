@@ -6,12 +6,6 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../uti
 import { createAuditLog, buildActorSnapshot, AuditAction, AuditStatus, getRequestMetadata } from '../audit-log';
 import { AuditMetadata } from '../audit-log/audit-log.model';
 
-interface RegisterInput {
-  name: string;
-  email: string;
-  password: string;
-}
-
 interface LoginInput {
   email: string;
   password: string;
@@ -51,33 +45,6 @@ const sanitizeUser = (user: IUser) => ({
   email: user.email,
   role: user.role,
 });
-
-export const register = async (input: RegisterInput) => {
-  const existing = await User.findOne({ email: input.email });
-  if (existing) {
-    throw ApiError.conflict('An account with this email already exists');
-  }
-
-  const hashedPassword = await bcrypt.hash(input.password, 10);
-
-  const user = await User.create({
-    name: input.name,
-    email: input.email,
-    password: hashedPassword,
-    role: UserRole.EMPLOYEE,
-  });
-
-  const tokens = await generateTokens(user);
-  await createAuditLog({
-  actor: buildActorSnapshot(user),
-  action: AuditAction.USER_REGISTERED,
-  entityType: 'User',
-  entityId: user._id,
-  description: `${user.email} self-registered an account`,
-  metadata: {},
-});
-  return { user: sanitizeUser(user), ...tokens };
-};
 
 export const login = async (input: LoginInput) => {
   const user = await User.findOne({ email: input.email }).select('+password');
@@ -176,7 +143,7 @@ export const resetPassword = async (input: ResetPasswordInput) => {
     actor: buildActorSnapshot(user),
     action: AuditAction.USER_PASSWORD_RESET,
     entityType: 'User',
-    entityId: user._id,
+    entityId: user._id.toString(),
     description: `${user.email} reset their password`,
     metadata: {},
   });
@@ -184,24 +151,3 @@ export const resetPassword = async (input: ResetPasswordInput) => {
   return { message: 'Password reset successfully. Please log in with your new password.' };
 };
 
-export const changePassword = async (userId: string, currentPassword: string, newPassword: string) => {
-  const user = await User.findById(userId).select('+password');
-  if (!user) throw ApiError.notFound('User not found');
-
-  const isMatch = await bcrypt.compare(currentPassword, user.password);
-  if (!isMatch) throw ApiError.unauthorized('Current password is incorrect');
-
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-  user.password = hashedPassword;
-  delete user.refreshTokenHash;
-  await user.save();
-  
-  await createAuditLog({
-    actor: buildActorSnapshot(user),
-    action: AuditAction.USER_PASSWORD_CHANGED,
-    entityType: 'User',
-    entityId: user._id,
-    description: `${user.email} changed their password`,
-    metadata: {},
-  });
-};

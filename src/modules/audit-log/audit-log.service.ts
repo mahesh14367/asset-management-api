@@ -17,7 +17,7 @@ interface CreateAuditLogInput {
   action: AuditAction;
   status?: AuditStatus;
   entityType: string;
-  entityId?: Types.ObjectId;
+  entityId?: string;
   description: string;
   changes?: AuditChanges;
   metadata?: AuditMetadata;

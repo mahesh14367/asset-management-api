@@ -8,12 +8,8 @@ export const authenticate = asyncHandler(async (req: Request, _res: Response, ne
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;
 
-  if (!token) {
-    throw ApiError.unauthorized('Authentication token missing');
-  }
+  if (!token) throw ApiError.unauthorized('Authentication token missing');
 
-  // If the token is invalid/expired, jwt.verify throws — asyncHandler
-  // forwards it to globalErrorHandler, which already has JWT-specific branches.
   const payload = verifyAccessToken(token);
 
   const user = await User.findById(payload.sub);
@@ -21,7 +17,13 @@ export const authenticate = asyncHandler(async (req: Request, _res: Response, ne
     throw ApiError.unauthorized('User no longer exists or has been deactivated');
   }
 
-  req.user = { id: user._id.toString(), role: user.role };
+  req.user = {
+    id: user._id.toString(),
+    role: user.role,
+    employeeId: user.employeeId ? user.employeeId.toString() : null,
+  };
+  req.actor = user; // full doc — every controller needing an audit-log actor snapshot uses this now
+
   next();
 });
 

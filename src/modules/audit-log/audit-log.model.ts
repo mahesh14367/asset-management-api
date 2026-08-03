@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import mongoose, { Schema, model, Model, Document, Types } from 'mongoose';
 
 // Only actions that are security-sensitive or change important state get logged.
 // Adding a new one here is deliberate — resist the urge to log everything.
@@ -14,6 +14,18 @@ export enum AuditAction {
   USER_STATUS_CHANGED = 'USER_STATUS_CHANGED',
   USER_LOGGED_IN = 'USER_LOGGED_IN',
   USER_PASSWORD_RESET = 'USER_PASSWORD_RESET',
+  EMPLOYEE_CREATED = 'EMPLOYEE_CREATED',
+  EMPLOYEE_UPDATED = 'EMPLOYEE_UPDATED',
+  EMPLOYEE_STATUS_CHANGED = 'EMPLOYEE_STATUS_CHANGED',
+  USER_ACCESS_GRANTED = 'USER_ACCESS_GRANTED',
+  USER_ACCESS_REVOKED = 'USER_ACCESS_REVOKED',
+  ASSET_CREATED = 'ASSET_CREATED',
+  ASSET_UPDATED = 'ASSET_UPDATED',
+  ASSET_STATUS_CHANGED = 'ASSET_STATUS_CHANGED',
+  ASSET_ASSIGNED = 'ASSET_ASSIGNED',
+  ASSET_RETURNED = 'ASSET_RETURNED',
+  LICENSE_SEAT_ALLOCATED = 'LICENSE_SEAT_ALLOCATED',
+  LICENSE_SEAT_REVOKED = 'LICENSE_SEAT_REVOKED',
 }
 
 export enum AuditStatus {
@@ -103,4 +115,4 @@ auditLogSchema.pre('findOneAndDelete', function (next) { blockMutation(next); })
 // @ts-ignore - Mongoose query hook signature differs from document hook
 auditLogSchema.pre('deleteMany', function (next) { blockMutation(next); });
 
-export const AuditLog = model<IAuditLog>('AuditLog', auditLogSchema);
+export const AuditLog = (mongoose.models.AuditLog as Model<IAuditLog>) ?? model<IAuditLog>('AuditLog', auditLogSchema);
