@@ -4,15 +4,15 @@ import { validate } from '../../middlewares/validate.middleware';
 import { authenticate, authorize } from '../../middlewares/auth.middleware';
 import { UserRole } from './user.model';
 import {
-  createUserSchema,
   updateUserSchema,
   updateRoleSchema,
-  updateStatusSchema,
   changePasswordSchema,
   listUsersQuerySchema,
 } from './user.validation';
 
 const router = Router();
+
+// router.post('/', validate(createUserSchema), userController.createUser);
 
 // All routes below require authentication
 router.use(authenticate);
@@ -29,19 +29,11 @@ router.get(
   userController.listUsers
 );
 router.get('/:id', authorize(UserRole.SUPER_ADMIN, UserRole.ASSET_MANAGER), userController.getUser);
-router.post('/', authorize(UserRole.SUPER_ADMIN), validate(createUserSchema), userController.createUser);
-router.patch('/:id', authorize(UserRole.SUPER_ADMIN), validate(updateUserSchema), userController.updateUser);
 router.patch(
   '/:id/role',
   authorize(UserRole.SUPER_ADMIN),
   validate(updateRoleSchema),
   userController.updateUserRole
-);
-router.patch(
-  '/:id/status',
-  authorize(UserRole.SUPER_ADMIN),
-  validate(updateStatusSchema),
-  userController.updateUserStatus
 );
 
 export default router;

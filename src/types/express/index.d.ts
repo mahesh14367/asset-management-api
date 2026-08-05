@@ -1,4 +1,4 @@
-import { UserRole } from '../../modules/user/user.model';
+import { UserRole, IUser } from '../../modules/user/user.model';
 
 declare global {
   namespace Express {
@@ -6,7 +6,9 @@ declare global {
       user?: {
         id: string;
         role: UserRole;
+        employeeId: string | null;
       };
+      actor?: IUser; // full user doc, attached once by `authenticate` — avoids re-querying per controller
     }
   }
 }

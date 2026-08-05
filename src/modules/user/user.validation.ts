@@ -1,20 +1,20 @@
 import Joi from 'joi';
 import { UserRole } from './user.model';
 
-export const createUserSchema = Joi.object({
-  name: Joi.string().trim().min(2).max(100).required(),
-  email: Joi.string().trim().email().required(),
-  password: Joi.string()
-    .min(8)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .required()
-    .messages({
-      'string.pattern.base': 'Password must contain uppercase, lowercase, and a number',
-    }),
-  role: Joi.string()
-    .valid(...Object.values(UserRole))
-    .default(UserRole.EMPLOYEE),
-});
+// export const createUserSchema = Joi.object({
+//   name: Joi.string().trim().min(2).max(100).required(),
+//   email: Joi.string().trim().email().required(),
+//   password: Joi.string()
+//     .min(8)
+//     .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+//     .required()
+//     .messages({
+//       'string.pattern.base': 'Password must contain uppercase, lowercase, and a number',
+//     }),
+//   role: Joi.string()
+//     .valid(...Object.values(UserRole))
+//     .default(UserRole.EMPLOYEE),
+// });
 
 export const updateUserSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100),
