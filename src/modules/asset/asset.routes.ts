@@ -3,6 +3,7 @@ import * as assetController from './asset.controller';
 import { validate } from '../../middlewares/validate.middleware';
 import { authenticate, authorize } from '../../middlewares/auth.middleware';
 import { UserRole } from '../user/user.model';
+import { upload } from '../../shared/storage';
 import {
   createAssetSchema,
   updateAssetSchema,
@@ -37,6 +38,17 @@ router.patch(
   authorize(UserRole.SUPER_ADMIN, UserRole.ASSET_MANAGER),
   validate(updateAssetStatusSchema),
   assetController.updateAssetStatus
+);
+router.post(
+  '/:id/attachments',
+  authorize(UserRole.SUPER_ADMIN, UserRole.ASSET_MANAGER),
+  upload.single('file'),
+  assetController.addAttachment
+);
+router.delete(
+  '/:id/attachments',
+  authorize(UserRole.SUPER_ADMIN, UserRole.ASSET_MANAGER),
+  assetController.deleteAttachment
 );
 
 export default router;

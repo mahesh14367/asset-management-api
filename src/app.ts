@@ -13,6 +13,10 @@ import { auditLogRoutes } from './modules/audit-log';
 import { employeeRoutes } from './modules/employee';
 import { assetRoutes } from './modules/asset';
 import { assetAssignmentRoutes } from './modules/asset-assignment';
+import { maintenanceRoutes } from './modules/maintenance';
+import { dashboardRoutes } from './modules/dashboard';
+import { reportRoutes } from './modules/reports';
+import { fileRoutes } from './modules/files';
 
 export const createApp = (): Application => {
   const app = express();
@@ -39,6 +43,12 @@ export const createApp = (): Application => {
   app.use('/api/v1/employees', employeeRoutes);
   app.use('/api/v1/assets', assetRoutes);
   app.use('/api/v1/asset-assignments', assetAssignmentRoutes);
+  app.use('/api/v1/maintenance', maintenanceRoutes);
+  app.use('/api/v1/dashboard', dashboardRoutes);
+  app.use('/api/v1/reports', reportRoutes);
+  app.use('/api/v1/files', fileRoutes);
+  // Serve uploaded files when STORAGE_DRIVER=local
+  app.use('/uploads', express.static('uploads'));
 
   console.log(`server endpoint: http://localhost:${config.port}/api/v1/`);
 

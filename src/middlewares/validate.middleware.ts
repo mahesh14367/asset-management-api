@@ -15,6 +15,11 @@ export const validate =
       return next(error); // caught by globalErrorHandler's `err.isJoi` branch
     }
 
-    req[part] = value;
+    // Express v5 made req.query a read-only getter — direct assignment throws.
+    if (part === 'query') {
+      Object.defineProperty(req, 'query', { value, writable: true, configurable: true, enumerable: true });
+    } else {
+      req[part] = value;
+    }
     next();
   };

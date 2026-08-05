@@ -63,6 +63,7 @@ export interface IAsset extends Document {
   warrantyExpiryDate?: Date;
   location?: string;
   notes?: string;
+  attachments: { fileKey: string; url: string; originalName: string; mimeType: string; size: number; uploadedAt: Date }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -87,6 +88,16 @@ const assetSchema = new Schema<IAsset>(
     warrantyExpiryDate: { type: Date },
     location: { type: String, trim: true },
     notes: { type: String, trim: true, maxlength: 1000 },
+    attachments: [
+      {
+        fileKey:      { type: String, required: true },
+        url:          { type: String, required: true },
+        originalName: { type: String, required: true },
+        mimeType:     { type: String, required: true },
+        size:         { type: Number, required: true },
+        uploadedAt:   { type: Date,   default: Date.now },
+      },
+    ],
   },
   options
 );

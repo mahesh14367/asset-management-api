@@ -1,0 +1,9 @@
+Postman  →  POST /api/v1/files/upload
+              ↓
+         multer (memoryStorage) reads the file into req.file.buffer
+              ↓
+         storageService.upload(req.file, 'asset-images')
+              ↓
+         MinIOProvider → PutObjectCommand → localhost:9000/assets/asset-images/<uuid>.jpg
+              ↓
+         returns { fileKey, url, size, mimeType }

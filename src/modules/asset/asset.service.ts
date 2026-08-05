@@ -15,6 +15,7 @@ import { getNextSequence } from '../../utils/counter.util';
 import { getPaginationParams, buildPaginationMeta, escapeRegex } from '../../utils/pagination.util';
 import { createAuditLog, buildActorSnapshot, AuditAction } from '../audit-log';
 import { AuditMetadata } from '../audit-log/audit-log.model';
+import { storageService } from '../../shared/storage';
 
 type Actor = Pick<IUser, '_id' | 'name' | 'email' | 'role'>;
 
@@ -55,6 +56,7 @@ const sanitizeAsset = (asset: IAsset) => {
     warrantyExpiryDate: asset.warrantyExpiryDate,
     location: asset.location,
     notes: asset.notes,
+    attachments: asset.attachments,
     createdAt: asset.createdAt,
   };
 
@@ -236,6 +238,67 @@ export const updateAssetStatus = async (
     entityId: id,
     description: `${asset.assetTag} status changed from ${previousStatus} to ${newStatus}${reason ? ` — ${reason}` : ''}`,
     changes: { before: { status: previousStatus }, after: { status: newStatus } },
+    metadata,
+  });
+
+  return sanitizeAsset(asset);
+};
+
+export const addAttachment = async (
+  id: string,
+  file: Express.Multer.File,
+  actor: Actor,
+  metadata: AuditMetadata
+) => {
+  const asset = await Asset.findById(id);
+  if (!asset) throw ApiError.notFound('Asset not found');
+
+  const result = await storageService.upload(file, `asset-attachments/${asset.assetTag}`);
+
+  asset.attachments.push({
+    fileKey:      result.fileKey,
+    url:          result.url,
+    originalName: result.originalName,
+    mimeType:     result.mimeType,
+    size:         result.size,
+    uploadedAt:   new Date(),
+  });
+  await asset.save();
+
+  await createAuditLog({
+    actor: buildActorSnapshot(actor),
+    action: AuditAction.ASSET_UPDATED,
+    entityType: 'Asset',
+    entityId: id,
+    description: `Attachment '${result.originalName}' added to ${asset.assetTag}`,
+    metadata,
+  });
+
+  return sanitizeAsset(asset);
+};
+
+export const deleteAttachment = async (
+  id: string,
+  fileKey: string,
+  actor: Actor,
+  metadata: AuditMetadata
+) => {
+  const asset = await Asset.findById(id);
+  if (!asset) throw ApiError.notFound('Asset not found');
+
+  const idx = asset.attachments.findIndex(a => a.fileKey === fileKey);
+  if (idx === -1) throw ApiError.notFound('Attachment not found on this asset');
+
+  await storageService.delete(fileKey);
+  asset.attachments.splice(idx, 1);
+  await asset.save();
+
+  await createAuditLog({
+    actor: buildActorSnapshot(actor),
+    action: AuditAction.ASSET_UPDATED,
+    entityType: 'Asset',
+    entityId: id,
+    description: `Attachment '${fileKey}' removed from ${asset.assetTag}`,
     metadata,
   });
 
