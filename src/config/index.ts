@@ -15,4 +15,23 @@ export const config = {
     refreshExpire: process.env.JWT_REFRESH_EXPIRE || '7d',
     refreshCookieMaxAgeMs: parseInt(process.env.JWT_REFRESH_COOKIE_MAXAGE_MS || '604800000', 10),
   },
+  storage: {
+    driver: process.env.STORAGE_DRIVER || 'local', // 's3' | 'minio' | 'local'
+    s3: {
+      bucket:          process.env.AWS_S3_BUCKET           || '',
+      region:          process.env.AWS_REGION               || 'us-east-1',
+      accessKeyId:     process.env.AWS_ACCESS_KEY_ID        || '',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY    || '',
+    },
+    minio: {
+      endpoint:  process.env.MINIO_ENDPOINT   || 'http://localhost:9000',
+      bucket:    process.env.MINIO_BUCKET     || 'assets',
+      accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
+      secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+    },
+    local: {
+      uploadDir: process.env.LOCAL_UPLOAD_DIR || './uploads',
+      baseUrl:   process.env.LOCAL_BASE_URL   || 'http://localhost:3000',
+    },
+  },
 };

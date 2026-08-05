@@ -14,11 +14,14 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1103.0",
+    "@aws-sdk/s3-request-presigner": "^3.1103.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.1",
     "helmet": "^8.3.0",
@@ -26,6 +29,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.8.0",
     "morgan": "^1.11.0",
+    "multer": "^2.2.0",
+    "pdfkit": "^0.19.1",
     "winston": "^3.19.0"
   },
   "devDependencies": {
@@ -37,7 +42,9 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
+    "@types/multer": "^2.2.0",
     "@types/node": "^26.1.1",
+    "@types/pdfkit": "^0.17.6",
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
