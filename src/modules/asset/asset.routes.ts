@@ -51,4 +51,10 @@ router.delete(
   assetController.deleteAttachment
 );
 
+router.delete(
+  '/:id',
+  authorize(UserRole.SUPER_ADMIN, UserRole.ASSET_MANAGER),
+  assetController.deleteAsset
+);
+
 export default router;
