@@ -50,6 +50,7 @@ export const getStats = async () => {
       { $group: { _id: '$status', count: { $sum: 1 } } },
     ]),
     Asset.aggregate<{ _id: string; count: number }>([
+      { $match: { status: { $ne: AssetStatus.DISPOSED } } },
       { $group: { _id: '$assetKind', count: { $sum: 1 } } },
     ]),
     Employee.countDocuments(),
@@ -66,7 +67,9 @@ export const getStats = async () => {
   let total = 0;
   for (const g of assetStatusGroups) {
     byStatus[g._id] = g.count;
-    total += g.count;
+    if (g._id !== AssetStatus.DISPOSED) {
+      total += g.count;
+    }
   }
 
   const byKind = assetKindGroups.reduce(

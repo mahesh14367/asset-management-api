@@ -304,3 +304,18 @@ export const deleteAttachment = async (
 
   return sanitizeAsset(asset);
 };
+
+export const deleteAsset = async (id: string, actor: Actor, metadata: AuditMetadata) => {
+  const asset = await Asset.findById(id);
+  if (!asset) throw ApiError.notFound('Asset not found');
+   asset.status = AssetStatus.DISPOSED;
+   await asset.save();
+  await createAuditLog({
+    actor: buildActorSnapshot(actor),
+    action: AuditAction.ASSET_STATUS_CHANGED,
+    entityType: 'Asset',
+    entityId: id,
+    description: `Deleted asset ${asset.assetTag} (${asset.name})`,
+    metadata,
+  });
+};

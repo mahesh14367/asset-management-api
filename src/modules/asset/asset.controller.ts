@@ -58,3 +58,8 @@ export const deleteAttachment = asyncHandler(async (req: Request, res: Response)
   const asset = await assetService.deleteAttachment(req.params.id as string, fileKey, req.actor!, getRequestMetadata(req));
   res.status(200).json(new ApiResponse(200, asset, 'Attachment deleted successfully'));
 });
+
+export const deleteAsset = asyncHandler(async (req: Request, res: Response) => {
+  const asset = await assetService.deleteAsset(req.params.id as string, req.actor!, getRequestMetadata(req));
+  res.status(200).json(new ApiResponse(200, asset, 'Asset deleted successfully'));
+});

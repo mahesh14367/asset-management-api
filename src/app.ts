@@ -22,7 +22,12 @@ export const createApp = (): Application => {
   const app = express();
 
   app.use(helmet());
-  app.use(cors({ origin: "*" }));
+  app.use(
+  cors({
+    origin: config.corsOrigin || 'http://localhost:3000', // exact origin, NOT '*'
+    credentials: true, // required since you're using cookies (refreshToken)
+  })
+);
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
