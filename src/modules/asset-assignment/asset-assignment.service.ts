@@ -15,6 +15,7 @@ import ApiError from '../../utils/ApiError';
 import { getPaginationParams, buildPaginationMeta } from '../../utils/pagination.util';
 import { createAuditLog, buildActorSnapshot, AuditAction } from '../audit-log';
 import { AuditMetadata } from '../audit-log/audit-log.model';
+import { storageService } from '../../shared/storage';
 
 type Actor = Pick<IUser, '_id' | 'name' | 'email' | 'role'>;
 
@@ -24,6 +25,7 @@ interface AssignAssetInput {
   expectedReturnDate?: Date;
   conditionAtAssignment?: string;
   remarks?: string;
+  image?: Express.Multer.File;
 }
 
 /**
@@ -46,6 +48,10 @@ export const assignAsset = async (input: AssignAssetInput, actor: Actor, metadat
     : assignLicenseSeat(asset, employee, input, actor, metadata);
 };
 
+
+export const getAssignment = async (id: string) => {
+  return HardwareAssignment.findById(id).populate('asset employee');
+};
 // ---------------------------------------------------------------------------
 // Hardware path — unchanged in substance from the original AssetAssignment logic,
 // just now living on the HardwareAssignment discriminator.
@@ -64,6 +70,20 @@ const assignHardware = async (
     throw ApiError.badRequest(`Asset is currently '${asset.status}' and cannot be assigned`);
   }
 
+  // Upload image if provided
+  let imageData;
+  if (input.image) {
+    const result = await storageService.upload(input.image, `assignment-images/${asset.assetTag}`);
+    imageData = {
+      fileKey: result.fileKey,
+      url: result.url,
+      originalName: result.originalName,
+      mimeType: result.mimeType,
+      size: result.size,
+      uploadedAt: new Date(),
+    };
+  }
+
   const session = await mongoose.startSession();
   try {
     let assignment!: IHardwareAssignment;
@@ -79,6 +99,7 @@ const assignHardware = async (
             conditionAtAssignment: input.conditionAtAssignment as AssetCondition,
             remarks: input.remarks,
             assignedBy: actor._id,
+            image: imageData,
           },
         ],
         { session }
@@ -119,6 +140,20 @@ const assignLicenseSeat = async (
   actor: Actor,
   metadata: AuditMetadata
 ) => {
+  // Upload image if provided
+  let imageData;
+  if (input.image) {
+    const result = await storageService.upload(input.image, `assignment-images/${asset.assetTag}`);
+    imageData = {
+      fileKey: result.fileKey,
+      url: result.url,
+      originalName: result.originalName,
+      mimeType: result.mimeType,
+      size: result.size,
+      uploadedAt: new Date(),
+    };
+  }
+
   const session = await mongoose.startSession();
   try {
     let assignment!: ILicenseAssignment;
@@ -143,6 +178,7 @@ const assignLicenseSeat = async (
             assignedDate: new Date(),
             remarks: input.remarks,
             assignedBy: actor._id,
+            image: imageData,
           },
         ],
         { session }
@@ -368,6 +404,7 @@ const sanitizeAssignment = (a: any) => ({
   assignedDate: a.assignedDate,
   assignedBy: a.assignedBy,
   remarks: a.remarks,
+  image: a.image,
   // hardware-only fields, present only when relevant — undefined keys are dropped by JSON.stringify
   expectedReturnDate: a.expectedReturnDate,
   returnedDate: a.returnedDate,

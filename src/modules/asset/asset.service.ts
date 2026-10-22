@@ -16,6 +16,7 @@ import { getPaginationParams, buildPaginationMeta, escapeRegex } from '../../uti
 import { createAuditLog, buildActorSnapshot, AuditAction } from '../audit-log';
 import { AuditMetadata } from '../audit-log/audit-log.model';
 import { storageService } from '../../shared/storage';
+import { generateAssetBarcode } from '../../utils/barcode.util';
 
 type Actor = Pick<IUser, '_id' | 'name' | 'email' | 'role'>;
 
@@ -57,6 +58,7 @@ const sanitizeAsset = (asset: IAsset) => {
     location: asset.location,
     notes: asset.notes,
     attachments: asset.attachments,
+    barcode: asset.barcode,
     createdAt: asset.createdAt,
   };
 
@@ -115,6 +117,35 @@ export const createAsset = async (input: CreateAssetInput, actor: Actor, metadat
 
   const Model = isHardware ? HardwareAsset : SoftwareLicenseAsset;
   const asset = await Model.create({ ...input, assetTag });
+
+  // Generate barcode and upload to local storage
+  try {
+    const barcodeBuffer = await generateAssetBarcode(assetTag);
+    const barcodeFile: Express.Multer.File = {
+      fieldname: 'barcode',
+      originalname: `${assetTag}.png`,
+      encoding: '7bit',
+      mimetype: 'image/png',
+      buffer: barcodeBuffer,
+      size: barcodeBuffer.length,
+      stream: null as any,
+      destination: '',
+      filename: `${assetTag}.png`,
+      path: '',
+    };
+    
+    const barcodeResult = await storageService.upload(barcodeFile, `asset-barcodes`);
+    
+    asset.barcode = {
+      fileKey: barcodeResult.fileKey,
+      url: barcodeResult.url,
+      generatedAt: new Date(),
+    };
+    await asset.save();
+  } catch (error) {
+    // Log barcode generation error but don't fail asset creation
+    console.error(`Failed to generate barcode for asset ${assetTag}:`, error);
+  }
 
   await createAuditLog({
     actor: buildActorSnapshot(actor),
@@ -308,8 +339,8 @@ export const deleteAttachment = async (
 export const deleteAsset = async (id: string, actor: Actor, metadata: AuditMetadata) => {
   const asset = await Asset.findById(id);
   if (!asset) throw ApiError.notFound('Asset not found');
-   asset.status = AssetStatus.DISPOSED;
-   await asset.save();
+  asset.status = AssetStatus.DISPOSED;
+  await asset.save();
   await createAuditLog({
     actor: buildActorSnapshot(actor),
     action: AuditAction.ASSET_STATUS_CHANGED,
@@ -318,4 +349,53 @@ export const deleteAsset = async (id: string, actor: Actor, metadata: AuditMetad
     description: `Deleted asset ${asset.assetTag} (${asset.name})`,
     metadata,
   });
+};
+
+export const regenerateAssetBarcode = async (id: string, actor: Actor, metadata: AuditMetadata) => {
+  const asset = await Asset.findById(id);
+  if (!asset) throw ApiError.notFound('Asset not found');
+
+  // Delete existing barcode if present
+  if (asset.barcode?.fileKey) {
+    try {
+      await storageService.delete(asset.barcode.fileKey);
+    } catch (error) {
+      console.error(`Failed to delete old barcode for asset ${asset.assetTag}:`, error);
+    }
+  }
+
+  // Generate new barcode
+  const barcodeBuffer = await generateAssetBarcode(asset.assetTag);
+  const barcodeFile: Express.Multer.File = {
+    fieldname: 'barcode',
+    originalname: `${asset.assetTag}.png`,
+    encoding: '7bit',
+    mimetype: 'image/png',
+    buffer: barcodeBuffer,
+    size: barcodeBuffer.length,
+    stream: null as any,
+    destination: '',
+    filename: `${asset.assetTag}.png`,
+    path: '',
+  };
+  
+  const barcodeResult = await storageService.upload(barcodeFile, `asset-barcodes`);
+  
+  asset.barcode = {
+    fileKey: barcodeResult.fileKey,
+    url: barcodeResult.url,
+    generatedAt: new Date(),
+  };
+  await asset.save();
+
+  await createAuditLog({
+    actor: buildActorSnapshot(actor),
+    action: AuditAction.ASSET_UPDATED,
+    entityType: 'Asset',
+    entityId: id,
+    description: `Regenerated barcode for asset ${asset.assetTag}`,
+    metadata,
+  });
+
+  return sanitizeAsset(asset);
 };

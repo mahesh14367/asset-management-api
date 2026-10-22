@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import asyncHandler from '../../utils/asyncHandler';
 import ApiResponse from '../../utils/ApiResponse';
+import ApiError from '../../utils/ApiError';
 import * as assignmentService from './asset-assignment.service';
 import { getRequestMetadata } from '../audit-log';
 
 export const assignAsset = asyncHandler(async (req: Request, res: Response) => {
-  const assignment = await assignmentService.assignAsset(req.body, req.actor!, getRequestMetadata(req));
+  const input = { ...req.body, image: req.file };
+  const assignment = await assignmentService.assignAsset(input, req.actor!, getRequestMetadata(req));
   res.status(201).json(new ApiResponse(201, assignment, 'Asset assigned successfully'));
 });
 
@@ -47,6 +49,11 @@ export const listAssignments = asyncHandler(async (req: Request, res: Response) 
 export const getAssetHistory = asyncHandler(async (req: Request, res: Response) => {
   const history = await assignmentService.getAssetAssignmentHistory(req.params.assetId as string);
   res.status(200).json(new ApiResponse(200, history, 'Asset assignment history fetched successfully'));
+});
+
+export const getAssignment = asyncHandler(async (req: Request, res: Response) => {
+  const assignment = await assignmentService.getAssignment(req.params.id as string);
+  res.status(200).json(new ApiResponse(200, assignment, 'Assignment fetched successfully'));
 });
 
 export const getEmployeeAssignments = asyncHandler(async (req: Request, res: Response) => {

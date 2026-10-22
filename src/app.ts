@@ -24,7 +24,7 @@ export const createApp = (): Application => {
   app.use(helmet());
   app.use(
   cors({
-    origin: config.corsOrigin || 'http://localhost:3000', // exact origin, NOT '*'
+    origin: config.corsOrigin || 'http://10.114.55.184:3000', // exact origin, NOT '*'
     credentials: true, // required since you're using cookies (refreshToken)
   })
 );

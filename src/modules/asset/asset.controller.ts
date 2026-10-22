@@ -63,3 +63,8 @@ export const deleteAsset = asyncHandler(async (req: Request, res: Response) => {
   const asset = await assetService.deleteAsset(req.params.id as string, req.actor!, getRequestMetadata(req));
   res.status(200).json(new ApiResponse(200, asset, 'Asset deleted successfully'));
 });
+
+export const regenerateBarcode = asyncHandler(async (req: Request, res: Response) => {
+  const asset = await assetService.regenerateAssetBarcode(req.params.id as string, req.actor!, getRequestMetadata(req));
+  res.status(200).json(new ApiResponse(200, asset, 'Barcode regenerated successfully'));
+});

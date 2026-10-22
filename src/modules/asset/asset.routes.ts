@@ -57,4 +57,10 @@ router.delete(
   assetController.deleteAsset
 );
 
+router.post(
+  '/:id/barcode/regenerate',
+  authorize(UserRole.SUPER_ADMIN, UserRole.ASSET_MANAGER),
+  assetController.regenerateBarcode
+);
+
 export default router;
