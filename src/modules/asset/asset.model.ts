@@ -64,6 +64,7 @@ export interface IAsset extends Document {
   location?: string;
   notes?: string;
   attachments: { fileKey: string; url: string; originalName: string; mimeType: string; size: number; uploadedAt: Date }[];
+  barcode?: { fileKey: string; url: string; generatedAt: Date };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,6 +99,11 @@ const assetSchema = new Schema<IAsset>(
         uploadedAt:   { type: Date,   default: Date.now },
       },
     ],
+    barcode: {
+      fileKey:      { type: String },
+      url:          { type: String },
+      generatedAt:  { type: Date,   default: Date.now },
+    },
   },
   options
 );

@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { Employee, IEmployee, EmploymentStatus, EmploymentType } from './employee.model';
+import { Employee, IEmployee, EmploymentStatus, EmploymentType, Department, Designation } from './employee.model';
 import { IUser } from '../user/user.model';
 import ApiError from '../../utils/ApiError';
 import { getNextSequence } from '../../utils/counter.util';
@@ -16,8 +16,8 @@ interface CreateEmployeeInput {
   lastName: string;
   email: string;
   phone?: string;
-  department: string;
-  designation: string;
+  department: Department;
+  designation: Designation;
   workLocation: string;
   employmentType?: EmploymentType;
   dateOfJoining: Date;
@@ -29,8 +29,8 @@ interface UpdateEmployeeInput {
   lastName?: string;
   email?: string;
   phone?: string;
-  department?: string;
-  designation?: string;
+  department?: Department;
+  designation?: Designation;
   workLocation?: string;
   employmentType?: EmploymentType;
   reportingManager?: string | null;
@@ -39,7 +39,7 @@ interface UpdateEmployeeInput {
 interface ListEmployeesQuery {
   page?: number;
   limit?: number;
-  department?: string;
+  department?: Department;
   employmentStatus?: EmploymentStatus;
   employmentType?: EmploymentType;
   search?: string;

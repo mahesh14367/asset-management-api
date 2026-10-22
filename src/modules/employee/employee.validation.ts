@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { EmploymentType, EmploymentStatus } from './employee.model';
+import { EmploymentType, EmploymentStatus, Department, Designation } from './employee.model';
 
 const objectId = Joi.string().trim().length(24).hex();
 
@@ -8,8 +8,14 @@ export const createEmployeeSchema = Joi.object({
   lastName: Joi.string().trim().min(2).max(50).required(),
   email: Joi.string().trim().email().required(),
   phone: Joi.string().trim().max(20),
-  department: Joi.string().trim().max(100).required(),
-  designation: Joi.string().trim().max(100).required(),
+  department: Joi.string()
+    .valid(...Object.values(Department))
+    .required()
+    .messages({ 'any.only': `Department must be one of: ${Object.values(Department).join(', ')}` }),
+  designation: Joi.string()
+    .valid(...Object.values(Designation))
+    .required()
+    .messages({ 'any.only': `Designation must be one of: ${Object.values(Designation).join(', ')}` }),
   workLocation: Joi.string().trim().max(100).required(),
   employmentType: Joi.string().valid(...Object.values(EmploymentType)).default(EmploymentType.FULL_TIME),
   dateOfJoining: Joi.date().iso().max('now').required(),
@@ -21,8 +27,8 @@ export const updateEmployeeSchema = Joi.object({
   lastName: Joi.string().trim().min(2).max(50),
   email: Joi.string().trim().email(),
   phone: Joi.string().trim().max(20),
-  department: Joi.string().trim().max(100),
-  designation: Joi.string().trim().max(100),
+  department: Joi.string().valid(...Object.values(Department)),
+  designation: Joi.string().valid(...Object.values(Designation)),
   workLocation: Joi.string().trim().max(100),
   employmentType: Joi.string().valid(...Object.values(EmploymentType)),
   reportingManager: objectId.allow(null),
@@ -52,7 +58,7 @@ export const grantAccessSchema = Joi.object({
 export const listEmployeesQuerySchema = Joi.object({
   page: Joi.number().integer().min(1),
   limit: Joi.number().integer().min(1).max(100),
-  department: Joi.string().trim(),
+  department: Joi.string().valid(...Object.values(Department)),
   employmentStatus: Joi.string().valid(...Object.values(EmploymentStatus)),
   employmentType: Joi.string().valid(...Object.values(EmploymentType)),
   search: Joi.string().trim().max(100),

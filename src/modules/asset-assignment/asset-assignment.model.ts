@@ -15,6 +15,7 @@ export interface IAssetAssignment extends Document {
   assignedDate: Date;
   assignedBy: Types.ObjectId;
   remarks?: string;
+  image?: { fileKey: string; url: string; originalName: string; mimeType: string; size: number; uploadedAt: Date };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +29,14 @@ const baseSchema = new Schema<IAssetAssignment>(
     assignedDate: { type: Date, required: true, default: Date.now },
     assignedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     remarks: { type: String, trim: true, maxlength: 500 },
+    image: {
+      fileKey:      { type: String },
+      url:          { type: String },
+      originalName: { type: String },
+      mimeType:     { type: String },
+      size:         { type: Number },
+      uploadedAt:   {type: Date,   default: Date.now },
+    },
   },
   options
 );
