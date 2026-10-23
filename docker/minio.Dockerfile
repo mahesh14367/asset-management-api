@@ -1,3 +1,3 @@
-FROM minio/minio:latest
+FROM cgr.dev/chainguard/minio:latest
 EXPOSE 9000 9001
 CMD ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
