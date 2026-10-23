@@ -1,0 +1,62 @@
+services:
+  # MinIO Storage Service
+  - type: docker
+    name: asset-management-minio
+    env: docker
+    dockerfilePath: ./docker/minio.Dockerfile
+    plan: free # Change to 'standard' for production
+    region: oregon
+    healthCheckPath: /minio/health/live
+    envVars:
+      - key: MINIO_ROOT_USER
+        generateValue: true
+      - key: MINIO_ROOT_PASSWORD
+        generateValue: true
+    disk:
+      name: minio-data
+      mountPath: /data
+      sizeGB: 10
+
+  # API Service
+  - type: web
+    name: asset-management-api
+    env: node
+    plan: free # Change to 'standard' for production
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8000
+      - key: MONGODB_URI
+        sync: false # Set manually in Render dashboard
+      - key: JWT_ACCESS_SECRET
+        sync: false # Set manually in Render dashboard
+      - key: JWT_REFRESH_SECRET
+        sync: false # Set manually in Render dashboard
+      - key: BCRYPT_SALT_ROUNDS
+        value: 12
+      - key: CORS_ORIGIN
+        sync: false # Set to your frontend URL
+      - key: STORAGE_DRIVER
+        value: minio
+      - key: MINIO_ENDPOINT
+        fromService:
+          type: web
+          name: asset-management-minio
+          property: url
+      - key: MINIO_BUCKET
+        value: assets
+      - key: MINIO_ACCESS_KEY
+        fromService:
+          type: web
+          name: asset-management-minio
+          envVarKey: MINIO_ROOT_USER
+      - key: MINIO_SECRET_KEY
+        fromService:
+          type: web
+          name: asset-management-minio
+          envVarKey: MINIO_ROOT_PASSWORD
