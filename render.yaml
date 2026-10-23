@@ -44,19 +44,10 @@ services:
       - key: STORAGE_DRIVER
         value: minio
       - key: MINIO_ENDPOINT
-        fromService:
-          type: web
-          name: asset-management-minio
-          property: url
+        sync: false # Set manually: https://your-minio-service.onrender.com
       - key: MINIO_BUCKET
         value: assets
       - key: MINIO_ACCESS_KEY
-        fromService:
-          type: web
-          name: asset-management-minio
-          envVarKey: MINIO_ROOT_USER
+        sync: false # Set manually: copy from MinIO service environment variables
       - key: MINIO_SECRET_KEY
-        fromService:
-          type: web
-          name: asset-management-minio
-          envVarKey: MINIO_ROOT_PASSWORD
+        sync: false # Set manually: copy from MinIO service environment variables
