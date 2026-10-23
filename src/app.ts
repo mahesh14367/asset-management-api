@@ -57,13 +57,8 @@ export const createApp = (): Application => {
 
   console.log(`server endpoint: http://localhost:${config.port}/api/v1/`);
 
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', message: 'Asset Management API is running', environment: config.nodeEnv });
-  });
   
-  app.get('/', (req, res) => {
-    res.status(200).json({ status: 'ok', message: 'Asset Management API is running', environment: config.nodeEnv });
-  });
+
 
   // ⚠️ Must stay last
   app.use(notFound);
